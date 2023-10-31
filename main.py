@@ -84,6 +84,19 @@ def draw(window, background, bg_image, player):
   pygame.display.update()
 
 
+def handle_move(player):
+  # get key pressed
+  keys = pygame.key.get_pressed()
+
+  player.x_vel = 0  # player only moves if key is held
+
+  # check key pressed and handle that
+  if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+    player.move_left(PLAYER_VEL)
+  if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+    player.move_right(PLAYER_VEL)
+
+
 # event loop
 def main(window):
   clock = pygame.time.Clock()
@@ -105,6 +118,8 @@ def main(window):
         run = False
         break
 
+    player.loop(FPS)
+    handle_move(player)
     # draw tiled background
     draw(window, background, bg_image, player)
 
