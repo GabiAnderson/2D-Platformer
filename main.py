@@ -23,6 +23,7 @@ window = pygame.display.set_mode((WIDTH, HEIGHT))
 # create a player that inherits from pygame's Sprite
 class Player(pygame.sprite.Sprite):
   COLOR = (255, 0, 0)
+  GRAVITY = 1
 
   def __init__(self, x, y, width, height):
     # using pygame.Rect to help with collision
@@ -32,6 +33,7 @@ class Player(pygame.sprite.Sprite):
     self.mask = None
     self.direction = "left"  #keep track of facing direction for sprite usage
     self.animation_count = 0  # animation does not wobbly when switching left/right
+    self.fall_count = 0  # to help with gravity acceleration
 
   def move(self, dx, dy):
     self.rect.x += dx
@@ -51,7 +53,10 @@ class Player(pygame.sprite.Sprite):
 
   # will be called every frame to handle movement and animation
   def loop(self, fps):
+    self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
     self.move(self.x_vel, self.y_vel)
+
+    self.fall_count += 1
 
   def draw(self, window):
     pygame.draw.rect(window, self.COLOR, self.rect)
