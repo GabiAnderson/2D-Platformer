@@ -12,7 +12,7 @@ pygame.init()
 pygame.display.set_caption("2D PLATFORMER")
 
 # set global variables
-WIDTH, HEIGHT = 500, 200
+WIDTH, HEIGHT = 500, 400
 FPS = 60
 PLAYER_VEL = 5  # speed of player
 
@@ -56,6 +56,16 @@ def load_sprite_sheet(dir1, dir2, width, height, direction=False):
   return all_sprites
 
 
+def load_block(size):
+  path = join("assets", "Terrain", "Terrain.png")
+  image = pygame.image.load(path).convert_alpha()
+  surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
+  #96,0 is the location of the green block in Terrain.png
+  rect = pygame.Rect(96, 0, size, size)
+  surface.blit(image, (0, 0), rect)
+  return surface
+
+
 # create a player that inherits from pygame's Sprite
 class Player(pygame.sprite.Sprite):
   COLOR = (255, 0, 0)
@@ -64,6 +74,7 @@ class Player(pygame.sprite.Sprite):
   ANIMATION_DELAY = 3
 
   def __init__(self, x, y, width, height):
+    super().__init__()
     # using pygame.Rect to help with collision
     self.rect = pygame.Rect(x, y, width, height)
     self.x_vel = 0
@@ -121,6 +132,30 @@ class Player(pygame.sprite.Sprite):
     window.blit(self.sprite, (self.rect.x, self.rect.y))
 
 
+# base class used for all objects (uniform collision across all)
+class Object(pygame.sprite.Sprite):
+
+  def __init__(self, x, y, width, height, name=None):
+    super().__init__()
+    self.rect = pygame.Rect(x, y, width, height)
+    self.image = pygame.Surface((width, height), pygame.SRCALPHA)
+    self.width = width
+    self.height = height
+    self.name = name
+
+  def draw(self, window):
+    window.blit(self.image, (self.rect.x, self.rect.y))
+
+
+class Block(Object):
+
+  def __init__(self, x, y, size):
+    super().__init__(x, y, size, size)
+    block = load_block(size)
+    self.image.blit(block, (0, 0))
+    self.mask = pygame.mask.from_surface(self.image)
+
+
 # pass in the color to change the background color/image
 def get_background(name):
   # load image based on color name
@@ -137,10 +172,13 @@ def get_background(name):
   return tiles, image
 
 
-def draw(window, background, bg_image, player):
+def draw(window, background, bg_image, player, objects):
   # draw bg_image at every tile pos
   for tile in background:
     window.blit(bg_image, tile)
+
+  for obj in objects:
+    obj.draw(window)
 
   # draw player
   player.draw(window)
@@ -170,6 +208,11 @@ def main(window):
 
   # create a player
   player = Player(100, 100, 50, 50)
+  block_size = 48
+  floor = [
+      Block(i * block_size, HEIGHT - block_size, block_size)
+      for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)
+  ]
 
   # define game loop
   run = True
@@ -185,7 +228,7 @@ def main(window):
     player.loop(FPS)
     handle_move(player)
     # draw tiled background
-    draw(window, background, bg_image, player)
+    draw(window, background, bg_image, player, floor)
 
   pygame.quit()
   quit()
