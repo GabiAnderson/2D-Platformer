@@ -61,6 +61,7 @@ class Player(pygame.sprite.Sprite):
   COLOR = (255, 0, 0)
   GRAVITY = 1
   SPRITES = load_sprite_sheet("MainCharacters", "PinkMan", 32, 32, True)
+  ANIMATION_DELAY = 3
 
   def __init__(self, x, y, width, height):
     # using pygame.Rect to help with collision
@@ -94,9 +95,29 @@ class Player(pygame.sprite.Sprite):
     self.move(self.x_vel, self.y_vel)
 
     self.fall_count += 1
+    self.update_sprite()
 
+  # this updates the sprite image to act as an animated character
+  def update_sprite(self):
+    sprite_sheet = "idle"
+    if self.x_vel != 0:
+      sprite_sheet = "run"
+
+    sprite_sheet_name = sprite_sheet + "_" + self.direction
+    sprites = self.SPRITES[sprite_sheet_name]
+    sprite_index = (self.animation_count //
+                    self.ANIMATION_DELAY) % len(sprites)
+
+    self.sprite = sprites[sprite_index]
+    self.animation_count += 1
+    self.update()
+
+  def update(self):
+    self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
+    self.mask = pygame.mask.from_surface(self.sprite)
+
+  # draw the sprite at the set location in the window
   def draw(self, window):
-    self.sprite = self.SPRITES["idle_" + self.direction][0]
     window.blit(self.sprite, (self.rect.x, self.rect.y))
 
 
