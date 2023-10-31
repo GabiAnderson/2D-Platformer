@@ -19,7 +19,42 @@ PLAYER_VEL = 5  # speed of player
 # set up pygame window
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
-# 
+
+# create a player that inherits from pygame's Sprite
+class Player(pygame.sprite.Sprite):
+  COLOR = (255, 0, 0)
+
+  def __init__(self, x, y, width, height):
+    # using pygame.Rect to help with collision
+    self.rect = pygame.Rect(x, y, width, height)
+    self.x_vel = 0
+    self.y_vel = 0  # how fast the player moves within each frame
+    self.mask = None
+    self.direction = "left"  #keep track of facing direction for sprite usage
+    self.animation_count = 0  # animation does not wobbly when switching left/right
+
+  def move(self, dx, dy):
+    self.rect.x += dx
+    self.rect.y += dy
+
+  def move_left(self, vel):
+    self.x_vel = -vel
+    if self.direction != "left":
+      self.direction = "left"
+      self.animation_count = 0
+
+  def move_right(self, vel):
+    self.x_vel = vel
+    if self.direction != "right":
+      self.direction = "right"
+      self.animation_count = 0
+
+  # will be called every frame to handle movement and animation
+  def loop(self, fps):
+    self.move(self.x_vel, self.y_vel)
+
+  def draw(self, window):
+    pygame.draw.rect(window, self.COLOR, self.rect)
 
 
 # pass in the color to change the background color/image
@@ -38,10 +73,13 @@ def get_background(name):
   return tiles, image
 
 
-def draw(window, background, bg_image):
+def draw(window, background, bg_image, player):
   # draw bg_image at every tile pos
   for tile in background:
     window.blit(bg_image, tile)
+
+  # draw player
+  player.draw(window)
 
   pygame.display.update()
 
@@ -52,6 +90,9 @@ def main(window):
 
   # set and get background info
   background, bg_image = get_background("Gray.png")
+
+  # create a player
+  player = Player(100, 100, 50, 50)
 
   # define game loop
   run = True
@@ -65,7 +106,7 @@ def main(window):
         break
 
     # draw tiled background
-    draw(window, background, bg_image)
+    draw(window, background, bg_image, player)
 
   pygame.quit()
   quit()
