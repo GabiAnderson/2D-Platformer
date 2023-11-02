@@ -100,9 +100,18 @@ class Player(pygame.sprite.Sprite):
       self.direction = "right"
       self.animation_count = 0
 
+  def landed(self):
+    self.fall_count = 0
+    self.y_vel = 0
+    self.jump_count = 0
+
+  def hit_head(self):
+    self.count = 0
+    self.y_vel *= -1
+
   # will be called every frame to handle movement and animation
   def loop(self, fps):
-    #self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
+    self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
     self.move(self.x_vel, self.y_vel)
 
     self.fall_count += 1
@@ -186,7 +195,23 @@ def draw(window, background, bg_image, player, objects):
   pygame.display.update()
 
 
-def handle_move(player):
+def handle_vertical_collision(player, objects, dy):
+  collided_objects = []
+  for obj in objects:
+    if pygame.sprite.collide_mask(player, obj):
+      if dy > 0:  # if moving down and colide with object
+        player.rect.bottom = obj.rect.top  # move bottom of player to top of object
+        player.landed()
+      elif dy < 0:
+        player.rect.top = obj.rect.bottom  # move top of player to bottom of object
+        player.hit_head()
+
+    collided_objects.append(obj)
+
+  return collided_objects
+
+
+def handle_move(player, objects):
   # get key pressed
   keys = pygame.key.get_pressed()
 
@@ -197,6 +222,8 @@ def handle_move(player):
     player.move_left(PLAYER_VEL)
   if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
     player.move_right(PLAYER_VEL)
+
+  handle_vertical_collision(player, objects, player.y_vel)
 
 
 # event loop
@@ -226,7 +253,7 @@ def main(window):
         break
 
     player.loop(FPS)
-    handle_move(player)
+    handle_move(player, floor)
     # draw tiled background
     draw(window, background, bg_image, player, floor)
 
